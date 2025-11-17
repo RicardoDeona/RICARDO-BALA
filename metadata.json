@@ -1,0 +1,7 @@
+{
+  "name": "Gemini Multimodal AI Studio",
+  "description": "A powerful AI assistant that combines image generation and editing, video animation and generation, conversational voice AI, and intelligent text-based assistance into a single, intuitive interface.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
