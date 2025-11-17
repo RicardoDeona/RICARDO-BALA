@@ -6,6 +6,7 @@ export enum Mode {
   VIDEO_GEN = 'VIDEO_GEN',
   IMAGE_ANIMATE = 'IMAGE_ANIMATE',
   VOICE_CONVO = 'VOICE_CONVO',
+  IMAGE_INTERPRET = 'IMAGE_INTERPRET',
 }
 
 export type OutputContent = {

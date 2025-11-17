@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ApiState, Mode } from '../types';
+import { ApiState } from '../types';
 import SparkIcon from './icons/SparkIcon';
 
 interface OutputDisplayProps {
@@ -51,8 +51,32 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ apiState, progressMessage
 
   const renderContent = () => {
     switch (data.type) {
-      case 'text':
-        return <div className="prose prose-invert p-6 whitespace-pre-wrap">{data.data as string}</div>;
+      case 'text': {
+        const textData = data.data as string;
+        const fileTextRegex = /<file_text>([\s\S]*?)<\/file_text>/;
+        const match = textData.match(fileTextRegex);
+
+        if (match) {
+          const humanReadablePart = textData.substring(0, match.index).replace("Here is the downloadable version:", "").trim();
+          const fileContent = match[1].trim();
+          
+          return (
+            <div className="p-6">
+              <div className="prose prose-invert whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: humanReadablePart }}></div>
+              {fileContent && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-300 mb-2">Downloadable Content</h3>
+                  <pre className="bg-gray-900 rounded-lg p-4 text-sm text-gray-200 overflow-x-auto">
+                    <code>{fileContent}</code>
+                  </pre>
+                </div>
+              )}
+            </div>
+          );
+        }
+        
+        return <div className="prose prose-invert p-6 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: textData }}></div>;
+      }
       case 'image':
         return (
           <div className="p-4 flex justify-center">

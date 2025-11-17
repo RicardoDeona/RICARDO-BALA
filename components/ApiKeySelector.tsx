@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
-// FIX: Define the AIStudio interface to resolve global type declaration conflicts for `window.aistudio`.
-interface AIStudio {
-  hasSelectedApiKey: () => Promise<boolean>;
-  openSelectKey: () => Promise<void>;
-}
-
+// FIX: Define the AIStudio interface inside the `declare global` block to avoid module-scope conflicts and ensure a single global definition.
 declare global {
+  interface AIStudio {
+    hasSelectedApiKey: () => Promise<boolean>;
+    openSelectKey: () => Promise<void>;
+  }
   interface Window {
     aistudio: AIStudio;
   }

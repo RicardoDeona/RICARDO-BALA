@@ -30,13 +30,14 @@ const InputArea: React.FC<InputAreaProps> = ({ mode, onSubmit, isLoading, isReco
     }
   };
   
-  const isFileUploadRelevant = mode === Mode.IMAGE_EDIT || mode === Mode.IMAGE_ANIMATE;
+  const isFileUploadRelevant = mode === Mode.IMAGE_EDIT || mode === Mode.IMAGE_ANIMATE || mode === Mode.IMAGE_INTERPRET;
 
   const getPlaceholderText = () => {
     switch(mode) {
         case Mode.IMAGE_GEN: return "e.g., A cinematic photo of a raccoon wearing a tiny space helmet...";
         case Mode.IMAGE_EDIT: return "e.g., Add a santa hat to the person...";
         case Mode.IMAGE_ANIMATE: return "Upload an image to animate it";
+        case Mode.IMAGE_INTERPRET: return "Upload an image to get a description and prompt ideas";
         case Mode.VIDEO_GEN: return "e.g., An epic drone shot of a futuristic city at sunset...";
         case Mode.VOICE_CONVO: return "Click the microphone to start talking...";
         case Mode.ASSISTANT:
@@ -55,7 +56,7 @@ const InputArea: React.FC<InputAreaProps> = ({ mode, onSubmit, isLoading, isReco
             placeholder={getPlaceholderText()}
             className="w-full bg-gray-700 border-2 border-transparent focus:border-purple-500 focus:ring-0 text-gray-200 rounded-lg p-3 pr-28 resize-none transition-colors"
             rows={3}
-            disabled={isLoading || isRecording || mode === Mode.VOICE_CONVO || mode === Mode.IMAGE_ANIMATE}
+            disabled={isLoading || isRecording || mode === Mode.VOICE_CONVO || mode === Mode.IMAGE_ANIMATE || mode === Mode.IMAGE_INTERPRET}
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
             <button

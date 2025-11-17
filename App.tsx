@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import Header from './components/Header';
 import InputArea from './components/InputArea';
@@ -11,6 +12,7 @@ import ImageIcon from './components/icons/ImageIcon';
 import ImageEditIcon from './components/icons/ImageEditIcon';
 import MovieIcon from './components/icons/MovieIcon';
 import AudioIcon from './components/icons/AudioIcon';
+import SearchIcon from './components/icons/SearchIcon';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<Mode>(Mode.ASSISTANT);
@@ -50,15 +52,16 @@ const App: React.FC = () => {
     setApiState({ isLoading: true, error: null, data: null });
     setProgressMessage('');
     
-    // Simple intent detection
     let effectiveMode = mode;
-    if(mode === Mode.ASSISTANT){
-      if(file) effectiveMode = Mode.IMAGE_EDIT;
-      else if (prompt.toLowerCase().includes('video') || prompt.toLowerCase().includes('animate')) effectiveMode = Mode.VIDEO_GEN;
-      else if (prompt.toLowerCase().includes('image') || prompt.toLowerCase().includes('draw')) effectiveMode = Mode.IMAGE_GEN;
+    if (mode === Mode.ASSISTANT) {
+        if (file) {
+            effectiveMode = prompt.trim() === '' ? Mode.IMAGE_INTERPRET : Mode.IMAGE_EDIT;
+        } else if (prompt.toLowerCase().includes('video') || prompt.toLowerCase().includes('animate')) {
+            effectiveMode = Mode.VIDEO_GEN;
+        } else if (prompt.toLowerCase().includes('image') || prompt.toLowerCase().includes('draw') || prompt.toLowerCase().includes('photo')) {
+            effectiveMode = Mode.IMAGE_GEN;
+        }
     }
-    if (file && mode === Mode.ASSISTANT) effectiveMode = Mode.IMAGE_EDIT;
-
 
     try {
       let result: OutputContent | null = null;
@@ -78,6 +81,11 @@ const App: React.FC = () => {
           const editedImageUrl = await geminiService.editImage(prompt, file);
           result = { type: 'image', data: editedImageUrl };
           break;
+        case Mode.IMAGE_INTERPRET:
+            if (!file) throw new Error("Please upload an image to interpret.");
+            const interpretation = await geminiService.interpretImage(file);
+            result = { type: 'text', data: interpretation };
+            break;
         case Mode.VIDEO_GEN:
           if (!isVeoReady) throw new Error("Please select an API key for video generation first.");
           const videoUrl = await geminiService.generateVideo(prompt, onProgress);
@@ -92,7 +100,6 @@ const App: React.FC = () => {
       }
       setApiState({ isLoading: false, error: null, data: result });
     } catch (err: any) {
-      // FIX: Handle API key errors for Veo models by resetting the key state, as per guidelines.
       if (isVeoMode && err.message?.includes('Requested entity was not found.')) {
         setIsVeoReady(false);
         setApiState({ isLoading: false, error: "Your API Key seems to be invalid. Please select a valid key and try again.", data: null });
@@ -106,10 +113,11 @@ const App: React.FC = () => {
 
   const modeOptions = [
     { id: Mode.ASSISTANT, icon: SparkIcon, label: "Assistant" },
+    { id: Mode.IMAGE_INTERPRET, icon: SearchIcon, label: "Interpret" },
     { id: Mode.IMAGE_GEN, icon: ImageIcon, label: "Image Gen" },
     { id: Mode.IMAGE_EDIT, icon: ImageEditIcon, label: "Image Edit" },
-    { id: Mode.VIDEO_GEN, icon: MovieIcon, label: "Video Gen" },
     { id: Mode.IMAGE_ANIMATE, icon: MovieIcon, label: "Animate" },
+    { id: Mode.VIDEO_GEN, icon: MovieIcon, label: "Video Gen" },
     { id: Mode.VOICE_CONVO, icon: AudioIcon, label: "Voice" },
   ];
 
@@ -117,7 +125,7 @@ const App: React.FC = () => {
     <div className="h-screen w-screen flex flex-col font-sans bg-gray-900 text-gray-100">
       <Header />
       <main className="flex-1 flex flex-col min-h-0">
-        <div className="p-4 border-b border-gray-700 flex justify-center gap-2">
+        <div className="p-4 border-b border-gray-700 flex justify-center flex-wrap gap-2">
             {modeOptions.map(opt => (
                 <button
                     key={opt.id}

@@ -4,6 +4,21 @@ import { type GenerateContentParameters } from "@google/genai";
 
 const getApiKey = () => process.env.API_KEY;
 
+const MASTER_PROMPT_SUFFIX = `
+──────────────────────────────────────────────
+OUTPUT FORMAT RULE (VERY IMPORTANT)
+──────────────────────────────────────────────
+Always return results in this structure:
+1. A human-readable, formatted response.
+2. A clean, downloadable version of the core content.
+
+Example format for the downloadable part:
+Here is the downloadable version:
+<file_text>
+... core content for the file goes here ...
+</file_text>
+`;
+
 const fileToGenerativePart = async (file: File) => {
   const base64EncodedDataPromise = new Promise<string>((resolve) => {
     const reader = new FileReader();
@@ -17,12 +32,38 @@ const fileToGenerativePart = async (file: File) => {
 
 export const getAssistantResponse = async (prompt: string) => {
     const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    const fullPrompt = `${prompt}\n${MASTER_PROMPT_SUFFIX}`;
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-pro',
-        contents: prompt
+        contents: fullPrompt
     });
     return response.text;
 };
+
+export const interpretImage = async (image: File) => {
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    const imagePart = await fileToGenerativePart(image);
+    
+    const instruction = `You are an expert image analyst. Your task is to interpret the provided image and generate creative prompts based on it.
+
+    Follow these steps precisely:
+    1.  **Describe the image:** Provide a clear and accurate description. Identify all key objects, characters, the environment, mood, and artistic style.
+    2.  **Generate 3 Prompts:** Based on your description, create three distinct prompts for an image generation model:
+        a)  **Realistic Prompt:** A prompt that would recreate the image as faithfully as possible, enhancing details for a photorealistic or high-quality artistic output.
+        b)  **Cinematic Prompt:** A prompt that reimagines the scene with dramatic lighting, dynamic camera angles, and an epic or moody atmosphere.
+        c)  **Creative Prompt:** A prompt that takes the core elements of the image and transports them into a fantasy, sci-fi, or surrealistic setting. Be imaginative.
+    3.  **Enhancement Suggestions:** Briefly provide one or two optional suggestions for how the user could further enhance or modify the generated prompts.
+
+    ${MASTER_PROMPT_SUFFIX}
+    `;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-pro',
+        contents: { parts: [imagePart, { text: instruction }] },
+    });
+    return response.text;
+};
+
 
 export const generateImage = async (prompt: string) => {
     const ai = new GoogleGenAI({ apiKey: getApiKey() });
